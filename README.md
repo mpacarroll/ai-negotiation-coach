@@ -4,4 +4,4 @@ A free, private negotiation coach. Build your prep sheet (anchor / target / walk
 
 **Live:** mpacarroll.github.io/negotiation-coach/tool/ · **Tool:** `tool/index.html` (self-contained, no account, nothing saved or sent).
 
-Part of Mick Hume's free tools — *the professionals you can't afford, made free and plain.* General coaching, not legal or financial advice. Not affiliated with any employer.
+Part of Mick Watts's free tools — *the professionals you can't afford, made free and plain.* General coaching, not legal or financial advice. Not affiliated with any employer.
