@@ -1,0 +1,9 @@
+{
+  "name": "ai-negotiation-coach",
+  "private": true,
+  "description": "Static site. No build step and no runtime dependencies; scripts are for local tests only.",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "test:e2e": "node tests/e2e/gym.e2e.js"
+  }
+}
