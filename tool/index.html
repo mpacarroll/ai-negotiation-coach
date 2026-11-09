@@ -177,6 +177,12 @@
   </section>
 
 
+  <section class="mc-cta" id="gym-link">
+    <h3>Ready to practice?</h3>
+    <p>The Negotiation Gym plays the other side: cooperative, firm or evasive. Then it scores you and shows where the conversation turned.</p>
+    <a class="btn" href="../gym/">Open the Gym</a>
+  </section>
+
   <section class="mc-cta">
     <h3>One useful thing a week</h3>
     <p>Free tools and plain-language AI. No hype, nothing to sell you first.</p>
@@ -196,7 +202,11 @@ function esc(s){return (s||"").trim();}
 // first piece of evidence as a clause: "Took on 2 extra clients; ..." becomes "that I took on 2 extra clients"
 function lead(ev){const f=ev.split(/[.;]/)[0].trim();const c=f.charAt(0).toLowerCase()+f.slice(1);return /^(\w+ed|took|led|ran|built|paid|grew|cut|won|made|brought|got|kept)\b/i.test(f)?"that I "+c:"that "+c;}
 function copyBtn(text){const id="c"+Math.random().toString(36).slice(2);setTimeout(()=>{const b=document.getElementById(id);if(b)b.onclick=()=>{navigator.clipboard.writeText(text);b.textContent="Copied ✓";setTimeout(()=>b.textContent="Copy the rehearsal prompt",1400);};},0);return `<button class="copy" id="${id}">Copy the rehearsal prompt</button>`;}
-const tabs=[...document.querySelectorAll('.tab')];tabs.forEach(t=>t.onclick=()=>{tabs.forEach(x=>x.setAttribute('aria-selected',x===t));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.id===t.dataset.t));});
+const tabs=[...document.querySelectorAll('.tab')];
+function openTab(k){const t=tabs.find(x=>x.dataset.t===k);if(!t)return;tabs.forEach(x=>x.setAttribute('aria-selected',x===t));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.id===k));}
+tabs.forEach(t=>t.onclick=()=>openTab(t.dataset.t));
+// Deep links from the Gym's drills: tool/#salary, tool/#rent, tool/#bill open that tab.
+openTab(location.hash.slice(1));window.addEventListener('hashchange',()=>openTab(location.hash.slice(1)));
 function show(id,html,quiet){const o=document.getElementById(id);o.innerHTML=html;o.classList.add('on');if(!quiet)o.scrollIntoView({behavior:'smooth',block:'nearest'});}
 function plan(kind,ctx,ev,batna,want,cur){
   const rehearse=`You are the other side of a ${kind} negotiation (a ${kind==='salary'?'manager':kind==='rent'?'landlord':'retention rep'}). Be realistic: a little resistant, not a pushover.\nMy situation: ${cur||'(see below)'}\nWhat I want: ${want||'a better deal'}\nMy evidence: ${ev||'(general)'}\nMy walk-away: ${batna||'(not stated)'}\nRun it as a back-and-forth: you push back, I respond, and after we finish give me feedback on where I was strong and where I gave in too early.`;

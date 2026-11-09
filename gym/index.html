@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Negotiation Gym: practice hard conversations, then see where they turned</title>
+<link rel="canonical" href="https://mpacarroll.github.io/ai-negotiation-coach/gym/">
+<meta name="description" content="Branching practice negotiations with a counterpart you can set to cooperative, firm or evasive. Clear objectives, a transparent score, and a replay that shows where the conversation turned. Private, nothing leaves your device.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="The Negotiation Gym">
+<meta property="og:description" content="Practice the hard conversation, then replay it and see where it turned. Free and private.">
+<meta property="og:image" content="https://mpacarroll.github.io/ai-negotiation-coach/assets/og-image.png">
+<style>
+
+  /* Mick Cairn house look (2026-10-07 mockup, approved 2026-10-08): charcoal and cairn stone carry the page,
+     green is the accent, ochre is the tartan's second thread. Fonts are self-hosted in ../assets/fonts. */
+  @font-face{font-family:"Young Serif";src:url("../assets/fonts/young-serif-latin-400-normal.woff2") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+  @font-face{font-family:"Atkinson Hyperlegible";src:url("../assets/fonts/atkinson-hyperlegible-latin-400-normal.woff2") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+  @font-face{font-family:"Atkinson Hyperlegible";src:url("../assets/fonts/atkinson-hyperlegible-latin-700-normal.woff2") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+  :root{
+    --char:#2b2e33; --ochre:#d08a2c; --green:#1d6b44; --green-deep:#14502f;
+    --stone:#e7e5e0; --sheet:#fbfaf7; --card:#ffffff; --ink:#1f2124; --muted:#5d5f63; --line:#d6d3cc;
+    --on-char:#efe6d2;
+    --display:"Young Serif",Georgia,"Times New Roman",serif;
+    --sans:"Atkinson Hyperlegible",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    color-scheme:light dark;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --ochre:#e09a3c; --green:#5bb585; --green-deep:#7cc9a0;
+    --stone:#121315; --sheet:#1b1d20; --card:#202327; --ink:#ecebe7; --muted:#a5a6a8; --line:#33363b;
+  }}
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  body{margin:0;font-family:var(--sans);background:var(--sheet);color:var(--ink);line-height:1.55;font-size:17px;-webkit-font-smoothing:antialiased}
+  a{color:var(--green)}
+  :focus-visible{outline:3px solid var(--ochre);outline-offset:2px}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 clamp(18px,4vw,40px)}
+
+  /* the cloth: text sits on solid charcoal, the tartan is a selvedge band with nothing on it */
+  .mc-top{background:var(--char);color:var(--on-char)}
+  .mc-top::after{content:"";display:block;height:26px;background-color:var(--char);border-top:2px solid var(--ochre);
+    background-image:
+      repeating-linear-gradient(90deg,rgba(0,0,0,.32) 0 14px,transparent 14px 40px),
+      repeating-linear-gradient(0deg,rgba(0,0,0,.32) 0 14px,transparent 14px 40px),
+      repeating-linear-gradient(90deg,transparent 0 24px,rgba(208,138,44,.8) 24px 28px,transparent 28px 40px),
+      repeating-linear-gradient(0deg,transparent 0 24px,rgba(208,138,44,.8) 24px 28px,transparent 28px 40px),
+      repeating-linear-gradient(90deg,transparent 0 33px,rgba(46,140,92,.9) 33px 35px,transparent 35px 40px)}
+  .mc-bar{display:flex;align-items:center;gap:14px;min-height:64px}
+  .mc-mark{display:flex;align-items:center;gap:10px;color:var(--on-char);text-decoration:none;margin-right:auto}
+  .mc-mark svg{flex:none}
+  .mc-mark b{display:block;font-family:var(--display);font-weight:400;font-size:1.25rem;line-height:1.1}
+  .mc-mark small{display:block;font-family:var(--mono);font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;opacity:.8}
+  .mc-all{color:var(--on-char);text-decoration:none;font-size:.92rem;opacity:.9}
+  .mc-all:hover{opacity:1;text-decoration:underline}
+
+
+  header.intro{padding:30px 0 4px}
+  h1{font-family:var(--display);font-weight:400;font-size:clamp(2rem,4.4vw,2.7rem);line-height:1.08;margin:0 0 .25em;text-wrap:balance}
+  h2{font-family:var(--display);font-weight:400;font-size:1.5rem;margin:1.4em 0 .4em}
+  h3{font-family:var(--display);font-weight:400;font-size:1.15rem;margin:1em 0 .35em}
+  .lede{color:var(--muted);max-width:66ch;margin:0}
+  .muted{color:var(--muted)}
+  .small{font-size:.88rem}
+  .tag{font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--green);background:color-mix(in srgb,var(--green) 14%,transparent);padding:3px 7px;border-radius:3px;white-space:nowrap}
+  .tag.ochre{color:#8a5a12;background:color-mix(in srgb,var(--ochre) 20%,transparent)}
+  @media (prefers-color-scheme:dark){.tag.ochre{color:var(--ochre)}}
+  .btn{display:inline-block;background:var(--char);color:var(--on-char);border:0;border-bottom:3px solid var(--green);padding:11px 18px;border-radius:6px;font:inherit;font-weight:700;cursor:pointer;text-decoration:none}
+  .btn:hover{background:#1c1e22}
+  @media (prefers-color-scheme:dark){.btn{background:#3a3e44}.btn:hover{background:#464a51}}
+  .btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line);border-bottom-width:3px}
+  .btn.small{padding:7px 12px;font-size:.88rem}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px 18px;box-shadow:0 14px 34px -26px rgba(20,20,22,.5)}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin:12px 0}
+  .card h3{margin:.4em 0 .25em}
+  .card p{margin:.3em 0}
+  .notice{border-left:4px solid var(--ochre);background:var(--card);padding:10px 14px;border-radius:4px;margin:14px 0}
+  .layout{display:grid;gap:24px}
+  @media (min-width:900px){.layout{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}}
+  ul.plain{list-style:none;padding:0;margin:.3em 0}
+  ul.plain li{padding:4px 0}
+  .obj li::before{content:"\25CB";color:var(--muted);margin-right:8px}
+  .obj li.met::before{content:"\2713";color:var(--green);font-weight:700}
+  .obj li.miss::before{content:"\2715";color:#b2432f;font-weight:700}
+  fieldset{border:0;padding:0;margin:10px 0}
+  legend{font-weight:700;margin-bottom:6px}
+  .choice-b{display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--line);background:var(--card);border-radius:8px;padding:10px 12px;margin:6px 0;cursor:pointer}
+  .choice-b:has(input:checked){border-color:var(--green);box-shadow:inset 0 0 0 1px var(--green)}
+  .choice-b input{margin-top:5px;width:auto}
+  .chat{display:flex;flex-direction:column;gap:10px;margin:8px 0 14px}
+  .msg{max-width:88%;padding:10px 14px;border-radius:10px;line-height:1.45}
+  .msg.them{background:var(--card);border:1px solid var(--line);align-self:flex-start}
+  .msg.you{background:color-mix(in srgb,var(--green) 16%,var(--card));align-self:flex-end}
+  .msg .who{display:block;font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+  .moves{display:flex;flex-direction:column;gap:8px}
+  .move{text-align:left;background:var(--card);color:var(--ink);border:1.5px solid var(--line);border-left:4px solid var(--green);border-radius:8px;padding:11px 14px;font:inherit;cursor:pointer}
+  .move:hover{border-color:var(--green)}
+  .score{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  .score .big{font-family:var(--display);font-size:3rem;line-height:1}
+  table.rubric{width:100%;border-collapse:collapse;font-size:.93rem;margin:6px 0}
+  table.rubric th,table.rubric td{text-align:left;vertical-align:top;padding:8px 6px;border-bottom:1px solid var(--line)}
+  table.rubric td.pts{white-space:nowrap;font-weight:700}
+  .bar{height:6px;background:var(--stone);border-radius:3px;overflow:hidden;margin-top:4px;min-width:60px}
+  .bar i{display:block;height:100%;background:var(--green)}
+  ol.timeline{list-style:none;padding:0;margin:0;counter-reset:t}
+  ol.timeline>li{border-left:3px solid var(--line);padding:4px 0 14px 16px;position:relative}
+  ol.timeline>li.turn-pt{border-left-color:var(--ochre)}
+  ol.timeline>li .swing{font-family:var(--mono);font-size:.78rem}
+  .down{color:#b2432f}.up{color:var(--green)}
+  @media (prefers-color-scheme:dark){.down{color:#ff8a73}}
+  .alts{margin:6px 0 0;padding-left:0;list-style:none}
+  .alts li{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:5px 0;border-top:1px dashed var(--line);font-size:.9rem}
+  details{margin:10px 0}
+  summary{cursor:pointer;font-weight:700}
+  .opt{display:block;width:100%;text-align:left;margin:6px 0;background:var(--card);color:var(--ink);border:1.5px solid var(--line);border-radius:8px;padding:10px 14px;font:inherit;cursor:pointer}
+  .opt.right{border-color:var(--green);box-shadow:inset 0 0 0 1px var(--green)}
+  .opt.wrong{border-color:#b2432f}
+  .opt[disabled]{cursor:default}
+  footer{color:var(--muted);font-size:.86rem;padding:28px 0 56px}
+  nav.crumbs{margin:14px 0 0;font-size:.92rem}
+  nav.crumbs a{font-weight:700}
+</style>
+</head>
+<body>
+<header class="mc-top"><div class="wrap mc-bar">
+  <a class="mc-mark" href="https://mpacarroll.github.io/ai-mick/" aria-label="Mick Cairn, all free tools">
+    <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><ellipse cx="16" cy="26" rx="12" ry="4.2" fill="#d08a2c"/><ellipse cx="16" cy="18.6" rx="8.6" ry="3.8" fill="#cfc8b8"/><ellipse cx="15.4" cy="12" rx="5.6" ry="3.1" fill="#d08a2c"/><ellipse cx="16.2" cy="6.6" rx="3.2" ry="2.3" fill="#2e8c5c"/></svg>
+    <span><b>Mick Cairn</b><small>Free tools</small></span>
+  </a>
+  <a class="mc-all" href="https://mpacarroll.github.io/ai-mick/#tools">All tools</a>
+</div></header>
+<div class="wrap">
+  <nav class="crumbs"><a href="../">Negotiation Coach</a> / <a href="#/">The Gym</a> &middot; <a href="#/drills">Drills</a> &middot; <a href="../tool/">Prep sheet tool</a></nav>
+  <noscript><p class="notice">The Gym needs JavaScript to run the practice conversations.</p></noscript>
+  <main id="app" aria-live="polite"></main>
+  <footer>Practice scenarios with invented people. General coaching, not legal or financial advice. Free and private: your runs are stored only in this browser. Built by Mick Cairn.</footer>
+</div>
+<script src="engine.js"></script>
+<script src="scenarios.js"></script>
+<script src="drills.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
