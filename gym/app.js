@@ -13,11 +13,14 @@
   let storage = null;
   try { storage = window.localStorage; storage.setItem('nc-gym-probe', '1'); storage.removeItem('nc-gym-probe'); } catch (e) { storage = null; }
   let store = E.loadStore(storage);
-  let notice = storage ? '' : 'This browser is blocking storage, so runs will not be saved after you close the tab. Everything else works.';
+  // `notice` is persistent (storage blocked); `flash` shows on the next rendered page only.
+  const notice = storage ? '' : 'This browser is blocking storage, so runs will not be saved after you close the tab. Everything else works.';
+  let flash = '';
+  if (E.ensureHistoryIds(store)) save();
 
   function save() {
     if (!storage) return;
-    if (!E.saveStore(storage, store)) notice = 'Could not save progress in this browser (storage full or blocked). Your current run still works.';
+    if (!E.saveStore(storage, store)) flash = 'Could not save progress in this browser (storage full or blocked). Your current run still works.';
   }
 
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -25,7 +28,12 @@
   const drill = id => DRILLS.find(d => d.id === id);
   const go = h => { if (location.hash === h) render(); else location.hash = h; };
 
-  function noticeHtml() { return notice ? `<p class="notice" role="status">${esc(notice)}</p>` : ''; }
+  function noticeHtml() {
+    const msgs = [notice, flash].filter(Boolean);
+    flash = '';
+    return msgs.map(m => `<p class="notice" role="status">${esc(m)}</p>`).join('');
+  }
+  const STALE = 'A saved run could not be restored because the scenario changed. It has been cleared.';
 
   /* ---------- home ---------- */
   function bestFor(id) {
@@ -35,7 +43,7 @@
 
   function home() {
     const active = E.restoreActive(SCENARIOS, store.active);
-    if (store.active && !active) { store.active = null; save(); notice = 'A saved run could not be restored because the scenario changed. It has been cleared.'; }
+    if (store.active && !active) { store.active = null; save(); flash = STALE; }
     const cards = SCENARIOS.map(s => {
       const best = bestFor(s.id);
       return `<article class="card" data-scenario="${esc(s.id)}">
@@ -47,9 +55,9 @@
         <a class="btn small" href="#/setup/${esc(s.id)}">Set up this round</a>
       </article>`;
     }).join('');
-    const hist = store.history.slice(0, 8).map((h, i) => {
+    const hist = store.history.slice(0, 8).map(h => {
       const s = scen(h.scenarioId); if (!s) return '';
-      return `<li><a href="#/debrief/${i}">${esc(s.title)}</a> <span class="muted small">vs ${esc(E.BEHAVIORS[h.behavior].label.toLowerCase())}, ${h.total}/100 ${esc(h.grade)}, ${esc(new Date(h.at).toLocaleDateString())}</span></li>`;
+      return `<li><a href="#/debrief/${esc(h.id)}">${esc(s.title)}</a> <span class="muted small">vs ${esc(E.BEHAVIORS[h.behavior].label.toLowerCase())}, ${h.total}/100 ${esc(h.grade)}, ${esc(new Date(h.at).toLocaleDateString())}</span></li>`;
     }).join('');
     app.innerHTML = `
       <header class="intro">
@@ -122,7 +130,7 @@
   /* ---------- play ---------- */
   function play() {
     const restored = E.restoreActive(SCENARIOS, store.active);
-    if (!restored) { store.active = null; save(); return go('#/'); }
+    if (!restored) { if (store.active) flash = STALE; store.active = null; save(); return go('#/'); }
     const { scenario: s, run } = restored;
     if (run.done) return finish(s, run);
     const chat = run.turns.map(t => `<div class="msg them"><span class="who">${esc(s.counterpart.name)}</span>${esc(t.said)}</div><div class="msg you"><span class="who">You</span>${esc(t.label)}</div>`).join('');
@@ -162,16 +170,17 @@
 
   function finish(s, run) {
     const sc = E.score(s, run);
-    store.history.unshift({ scenarioId: s.id, behavior: run.behavior, choices: run.turns.map(t => t.choice),
+    const id = E.newHistoryId(store);
+    store.history.unshift({ id, scenarioId: s.id, behavior: run.behavior, choices: run.turns.map(t => t.choice),
       total: sc.total, grade: sc.grade, outcomeId: run.outcome.id, at: Date.now() });
     store.history = store.history.slice(0, HISTORY_MAX);
     store.active = null; save();
-    go('#/debrief/0');
+    go('#/debrief/' + id);
   }
 
   /* ---------- debrief ---------- */
-  function debrief(n) {
-    const h = store.history[n];
+  function debrief(ref) {
+    const h = E.findHistory(store, ref);
     const s = h && scen(h.scenarioId);
     if (!s) return notFound('That round is not in this browser\'s history.');
     let run;
@@ -226,7 +235,7 @@
       </div>`;
     app.querySelectorAll('[data-rewind]').forEach(b => b.onclick = () => {
       const keep = h.choices.slice(0, Number(b.dataset.rewind));
-      store.active = { scenarioId: s.id, behavior: h.behavior, choices: keep.concat([b.dataset.alt]), startedAt: Date.now(), rewoundFrom: n };
+      store.active = { scenarioId: s.id, behavior: h.behavior, choices: keep.concat([b.dataset.alt]), startedAt: Date.now(), rewoundFrom: h.id };
       const r = E.restoreActive(SCENARIOS, store.active);
       if (!r) { store.active = null; save(); return failure(new Error('Could not rebuild the round from that point.')); }
       save();
@@ -309,7 +318,7 @@
         case '': home(); break;
         case 'setup': setup(parts[1]); break;
         case 'play': play(); break;
-        case 'debrief': debrief(Number(parts[1]) || 0); break;
+        case 'debrief': debrief(parts[1]); break;
         case 'drills': drills(); break;
         case 'drill': drillPage(parts[1]); break;
         default: notFound();

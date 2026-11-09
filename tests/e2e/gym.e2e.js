@@ -23,6 +23,7 @@ function serve() {
 }
 
 const steps = [];
+let firstDebrief = null;
 async function step(name, fn) {
   try { await fn(); steps.push(['ok', name]); console.log('ok   ' + name); }
   catch (e) { steps.push(['FAIL', name]); console.log('FAIL ' + name + '\n     ' + e.message); }
@@ -76,7 +77,8 @@ async function step(name, fn) {
   });
 
   await step('debrief shows score breakdown, turning point, replay and drills', async () => {
-    assert.match(page.url(), /#\/debrief\/0$/);
+    assert.match(page.url(), /#\/debrief\/r[0-9a-z]+$/);
+    firstDebrief = page.url();
     assert.equal(await page.locator('#rubric tr').count(), 5);
     assert.equal(await page.locator('#timeline > li').count(), 2);
     assert.equal(await page.locator('li.turn-pt').count(), 1);
@@ -101,6 +103,13 @@ async function step(name, fn) {
     await page.reload();
     assert.equal(await page.locator('#history li').count(), 2);
     assert.match(await page.textContent('[data-scenario=deadline]'), /Your best: \d+/);
+  });
+
+  await step('a debrief link still opens the same round after newer rounds are added', async () => {
+    await page.goto(firstDebrief);
+    await page.waitForSelector('#score');
+    assert.equal(await page.locator('#timeline > li').count(), 2);
+    assert.match(await page.textContent('#timeline'), /Fine, twelve/);
   });
 
   await step('a drill gives feedback, records completion, and links to the tool tab', async () => {
@@ -130,6 +139,27 @@ async function step(name, fn) {
     await page.reload();
     assert.match(await page.textContent('.notice'), /could not be restored/);
     assert.equal(await page.locator('#resume').count(), 0);
+    await page.goto(base + '/gym/#/drills');
+    assert.equal(await page.locator('.notice').count(), 0, 'one-off notice does not follow you around');
+  });
+
+  await step('opening the play page with a stale round explains why you landed home', async () => {
+    await page.evaluate(() => localStorage.setItem('nc-gym-v1', JSON.stringify({ v: 1, history: [], drills: {}, active: { scenarioId: 'heat', behavior: 'firm', choices: ['removed-move'] } })));
+    await page.goto('about:blank');
+    await page.goto(base + '/gym/#/play');
+    await page.waitForSelector('[data-scenario]');
+    assert.match(page.url(), /#\/$/);
+    assert.match(await page.textContent('.notice'), /could not be restored/);
+  });
+
+  await step('rounds saved before history ids existed get ids and old links still work', async () => {
+    await page.evaluate(() => localStorage.setItem('nc-gym-v1', JSON.stringify({ v: 1, drills: {}, active: null,
+      history: [{ scenarioId: 'deadline', behavior: 'firm', choices: ['anchor', 'twelve'], total: 30, grade: 'Rough', outcomeId: 'twelve', at: 1 }] })));
+    await page.goto(base + '/gym/#/debrief/0');
+    await page.reload();
+    await page.waitForSelector('#score');
+    const href = await page.evaluate(() => { location.hash = '#/'; return new Promise(r => setTimeout(() => r(document.querySelector('#history a').getAttribute('href')), 50)); });
+    assert.match(href, /^#\/debrief\/r[0-9a-z]+$/);
   });
 
   await step('blocked storage still lets you play, with a warning', async () => {
@@ -150,6 +180,8 @@ async function step(name, fn) {
     await page.goto(base + '/gym/#/setup/nope');
     assert.match(await page.textContent('h1'), /Not found/);
     await page.goto(base + '/gym/#/debrief/99');
+    assert.match(await page.textContent('h1'), /Not found/);
+    await page.goto(base + '/gym/#/debrief/not-a-round');
     assert.match(await page.textContent('h1'), /Not found/);
   });
 

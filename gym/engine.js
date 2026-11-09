@@ -328,6 +328,26 @@
   function saveStore(storage, data) {
     try { storage.setItem(STORE_KEY, JSON.stringify(data)); return true; } catch (e) { return false; }
   }
+  /* History entries carry a stable id so debrief links survive new rounds being added.
+     Entries saved before ids existed are backfilled; returns true if anything changed. */
+  function newHistoryId(data) {
+    const taken = new Set((data.history || []).map(h => h.id));
+    let id; let n = 0;
+    do { id = 'r' + Date.now().toString(36) + (n++ ? n.toString(36) : ''); } while (taken.has(id));
+    return id;
+  }
+  function ensureHistoryIds(data) {
+    let changed = false;
+    (data.history || []).forEach(h => { if (h && !h.id) { h.id = newHistoryId(data); changed = true; } });
+    return changed;
+  }
+  /* Find a history entry by id, or by position for links made before ids existed. */
+  function findHistory(data, ref) {
+    if (ref == null || ref === '') return null;
+    const byId = data.history.find(h => h.id === ref);
+    if (byId) return byId;
+    return /^\d+$/.test(ref) ? data.history[Number(ref)] || null : null;
+  }
   /* Restore an in-progress run from saved choice ids. Returns null if the scenario changed under it. */
   function restoreActive(scenarios, active) {
     if (!active) return null;
@@ -338,5 +358,5 @@
 
   return { BEHAVIORS, TAGS, RUBRIC, newRun, choose, replay, bestReachable, reachableOutcomes,
     score, debrief, validateScenario, allLines, bestScoreLine, lineFor, nextFor, isTerminal, fmt, objectiveMet,
-    STORE_KEY, emptyStore, loadStore, saveStore, restoreActive };
+    STORE_KEY, emptyStore, loadStore, saveStore, restoreActive, newHistoryId, ensureHistoryIds, findHistory };
 });

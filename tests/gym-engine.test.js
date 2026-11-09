@@ -179,6 +179,21 @@ test('persistence: an in-progress run restores, and a stale one is dropped', () 
   assert.equal(E.restoreActive(SCENARIOS, null), null);
 });
 
+test('persistence: history ids are stable, unique, backfilled, and old index links resolve', () => {
+  const data = { v: 1, history: [{ scenarioId: 'a' }, { scenarioId: 'b', id: 'rkeep' }], drills: {}, active: null };
+  assert.equal(E.ensureHistoryIds(data), true);
+  assert.equal(E.ensureHistoryIds(data), false);
+  assert.match(data.history[0].id, /^r[0-9a-z]+$/);
+  assert.equal(data.history[1].id, 'rkeep');
+  const ids = new Set(); for (let i = 0; i < 20; i++) { const id = E.newHistoryId(data); assert.ok(!ids.has(id)); ids.add(id); data.history.push({ id }); }
+  assert.equal(E.findHistory(data, 'rkeep').scenarioId, 'b');
+  assert.equal(E.findHistory(data, '0').scenarioId, 'a');
+  assert.equal(E.findHistory(data, '999'), null);
+  assert.equal(E.findHistory(data, 'nope'), null);
+  assert.equal(E.findHistory(data, ''), null);
+  assert.equal(E.findHistory(data, undefined), null);
+});
+
 test('content stays clear of advice language and house-style violations', () => {
   const text = JSON.stringify(SCENARIOS) + JSON.stringify(DRILLS);
   assert.doesNotMatch(text, /[–—]/, 'no en or em dashes');
