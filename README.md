@@ -10,19 +10,22 @@ Part of Mick Cairn's free tools — *the professionals you can't afford, made fr
 
 Branching practice negotiations. Pick a scenario, set the counterpart to cooperative, firm or evasive, and play it out. The debrief gives a transparent 100-point score, the turning point (the turn where the best result still possible moved most), a replay with coaching notes and "try this instead" rewinds, the highest-scoring line, and drills targeted at the weak spots. Runs and drill progress are saved only in the browser's localStorage; a reload mid-round resumes it.
 
+**Progress** (`#/progress`) rebuilds everything from your saved rounds: a ladder of every scenario against every counterpart (best score out of the most that counterpart allows; a cell clears at 65, or at its ceiling when that is lower), each rubric criterion over your last five rounds against the five before, the habits costing you points and the moves you use (each linked to its drill), and one next step. **Compare** (`#/compare/<a>/<b>`, linked from every debrief) puts two rounds of the same scenario side by side: where the lines split, both outcomes, and how each rubric line moved.
+
 | File | What it holds |
 | --- | --- |
 | `gym/engine.js` | Pure logic: runs, scoring rubric, best-reachable analysis, debrief, scenario validation, storage helpers |
 | `gym/scenarios.js` | Four invented scenarios (deadline, remote days, broken heat, noisy neighbor) |
+| `gym/progress.js` | Pure logic: ladder, criterion trends, habits, next step, and two-round comparison, all by replaying saved rounds |
 | `gym/drills.js` | Eight drills, each linked to a tool tab (`tool/#salary`, `#rent`, `#bill`) and a Scripts Pack rule by name |
-| `gym/app.js`, `gym/index.html` | The page, hash-routed: `#/`, `#/setup/<id>`, `#/play`, `#/debrief/<n>`, `#/drills`, `#/drill/<id>` |
+| `gym/app.js`, `gym/index.html` | The page, hash-routed: `#/`, `#/setup/<id>`, `#/play`, `#/debrief/<n>`, `#/drills`, `#/drill/<id>`, `#/progress`, `#/compare/<a>/<b>` |
 
 Try it locally: `python3 -m http.server 8000`, then open http://localhost:8000/gym/.
 
 Tests (no install needed; Playwright is only for the browser test):
 
 ```bash
-npm test            # node --test tests/*.test.js, engine and content
+npm test            # node --test tests/*.test.js, engine, progress and content
 npm run test:e2e    # Chromium drives the page end to end
 ```
 

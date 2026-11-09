@@ -112,6 +112,59 @@ async function step(name, fn) {
     assert.match(await page.textContent('#timeline'), /Fine, twelve/);
   });
 
+  await step('a debrief offers a comparison with the earlier round, which shows where they split', async () => {
+    assert.equal(await page.locator('#compare-list li').count(), 1);
+    await page.click('#compare-list a');
+    await page.waitForSelector('#cmp-rubric');
+    assert.match(page.url(), /#\/compare\/r[0-9a-z]+\/r[0-9a-z]+$/);
+    assert.match(await page.textContent('#cmp-headline'), /match for 1 turn, then split at turn 2/);
+    assert.match(await page.textContent('#cmp-headline'), /Round B scored \d+ more/);
+    assert.equal(await page.locator('#cmp-rubric tbody tr').count(), 6);
+    assert.match(await page.textContent('#cmp-a'), /Fine, twelve/);
+    assert.match(await page.textContent('#cmp-b'), /Fifteen works/);
+    await shot('07-compare');
+  });
+
+  await step('compare refuses rounds that do not exist', async () => {
+    await page.goto(base + '/gym/#/compare/nope/also-nope');
+    assert.match(await page.textContent('h1'), /Not found/);
+  });
+
+  await step('progress shows the ladder, skill trends, costly habits and a next step', async () => {
+    await page.goto(base + '/gym/#/');
+    await page.click('a[href="#/progress"].btn');
+    await page.waitForSelector('#ladder');
+    assert.equal(await page.locator('#ladder tbody tr').count(), 4);
+    const cell = page.locator('[data-row=deadline] td[data-behavior=firm]');
+    assert.match(await cell.textContent(), /\d+ \/ \d+/);
+    assert.match(await cell.getAttribute('class'), /cleared|tried/);
+    assert.match(await page.textContent('[data-row=deadline] td[data-behavior=evasive]'), /Not tried/);
+    assert.equal(await page.locator('#skills tr').count(), 5);
+    assert.match(await page.textContent('#costly'), /Gave ground without getting anything back/);
+    assert.match(await page.textContent('#next-step'), /Next challenge/);
+    await shot('08-progress');
+  });
+
+  await step('a ladder score opens its debrief, and an empty cell preselects that counterpart', async () => {
+    await page.click('[data-row=deadline] td[data-behavior=firm] a');
+    await page.waitForSelector('#score');
+    await page.goto(base + '/gym/#/progress');
+    await page.click('[data-row=deadline] td[data-behavior=evasive] a');
+    await page.waitForSelector('#setup-form');
+    assert.equal(await page.isChecked('input[value=evasive]'), true);
+  });
+
+  await step('the next step button starts the suggested round', async () => {
+    await page.goto(base + '/gym/#/progress');
+    const want = await page.getAttribute('#next-step [data-start]', 'data-behavior');
+    await page.click('#next-step [data-start]');
+    await page.waitForSelector('#current');
+    assert.match(await page.textContent('header.intro'), new RegExp(want, 'i'));
+    await page.click('[data-act=restart]');
+    await page.goto(base + '/gym/#/');
+    await page.click('#resume [data-act=discard]');
+  });
+
   await step('a drill gives feedback, records completion, and links to the tool tab', async () => {
     await page.goto(base + '/gym/#/drill/anchor');
     await page.click('[data-opt="0"]');
@@ -185,6 +238,14 @@ async function step(name, fn) {
     assert.match(await page.textContent('h1'), /Not found/);
   });
 
+  await step('progress with no rounds explains itself', async () => {
+    const c3 = await browser.newContext();
+    const p4 = await c3.newPage();
+    await p4.goto(base + '/gym/#/progress');
+    assert.match(await p4.textContent('#progress-empty'), /No finished rounds yet/);
+    await c3.close();
+  });
+
   await step('phone width has no horizontal scroll', async () => {
     const m = await browser.newContext({ viewport: { width: 375, height: 800 } });
     const p3 = await m.newPage();
@@ -194,6 +255,17 @@ async function step(name, fn) {
     const over = await p3.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     assert.ok(over <= 0, 'overflow ' + over);
     if (SHOTS) await p3.screenshot({ path: path.join(SHOTS, '06-phone-play.png'), fullPage: true });
+    // Progress and compare at phone width, with two finished rounds seeded.
+    await p3.evaluate(() => localStorage.setItem('nc-gym-v1', JSON.stringify({ v: 1, drills: {}, active: null, history: [
+      { id: 'rb', scenarioId: 'deadline', behavior: 'firm', choices: ['anchor', 'silence', 'trade15'], total: 0, grade: '', at: 2 },
+      { id: 'ra', scenarioId: 'deadline', behavior: 'firm', choices: ['anchor', 'twelve'], total: 0, grade: '', at: 1 }] })));
+    for (const route of ['#/progress', '#/compare/ra/rb']) {
+      await p3.goto(base + '/gym/' + route); await p3.reload();
+      await p3.waitForSelector(route === '#/progress' ? '#ladder' : '#cmp-rubric');
+      const o = await p3.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+      assert.ok(o <= 0, route + ' overflow ' + o);
+      if (SHOTS) await p3.screenshot({ path: path.join(SHOTS, (route === '#/progress' ? '09-phone-progress' : '10-phone-compare') + '.png'), fullPage: true });
+    }
     await m.close();
   });
 
