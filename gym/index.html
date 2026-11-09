@@ -118,13 +118,15 @@
   .opt.wrong{border-color:#b2432f}
   .opt[disabled]{cursor:default}
   .scroll-x{overflow-x:auto;max-width:100%}
-  table.ladder{border-collapse:collapse;width:100%;font-size:.92rem;min-width:420px}
+  table.ladder{border-collapse:collapse;width:100%;font-size:.92rem}
+  @media (max-width:520px){table.ladder{font-size:.8rem}table.ladder th,table.ladder td{padding:6px 3px}}
   table.ladder th,table.ladder td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
   table.ladder td.cell a{display:block;font-weight:700}
   table.ladder td.cleared{background:color-mix(in srgb,var(--green) 14%,transparent)}
   table.ladder td.tried{background:color-mix(in srgb,var(--ochre) 14%,transparent)}
   .cmp{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:12px 0}
   .cmp-col .timeline{padding-left:1.4em}
+  #next-step h2{margin-top:0}
   footer{color:var(--muted);font-size:.86rem;padding:28px 0 56px}
   nav.crumbs{margin:14px 0 0;font-size:.92rem}
   nav.crumbs a{font-weight:700}
