@@ -73,6 +73,8 @@ You now have forty-one things to say. The hard part was never the words.
 
 *The Negotiation Room · Scripts Pack · Mick Cairn*
 
+*Mick Cairn is an AI persona run by MC AI Studio LLC. Support and refunds: hello@micksfairdinkumai.com*
+
 *General coaching, not legal, financial, or career advice. Not affiliated with any employer.*
 
 *The free tool, always free: mpacarroll.github.io/ai-negotiation-coach/tool/*
